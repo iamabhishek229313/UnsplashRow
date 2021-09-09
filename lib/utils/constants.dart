@@ -16,3 +16,7 @@ class TextColor {
   static const Color dark_orange = Color.fromRGBO(103, 77, 27, 1);
   static const Color dark_green = Color.fromRGBO(3, 112, 60, 1);
 }
+
+class AppConstants {
+  static const String darkMode = "darkMode";
+}
