@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:unsplash_row/blocs/theme_bloc.dart';
 import 'package:unsplash_row/models/unsplash_data.dart';
+import 'package:unsplash_row/screens/image_detail_screen.dart';
 import 'package:unsplash_row/services/unsplash_api.dart';
 import 'package:unsplash_row/utils/constants.dart';
 
@@ -132,6 +133,9 @@ class _DiscoverViewState extends State<DiscoverView> {
               child: Stack(
                 children: [
                   GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => ImageDetail(image: images[index])));
+                    },
                     onDoubleTap: () {
                       /// [Put it at bookmark.]
                     },
@@ -141,7 +145,7 @@ class _DiscoverViewState extends State<DiscoverView> {
                         imageUrl: images[index].urls?.regular ?? "",
                         fit: BoxFit.cover,
                         progressIndicatorBuilder: (context, url, downloadProgress) =>
-                            CircularProgressIndicator(value: downloadProgress.progress),
+                            Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
                     ),
