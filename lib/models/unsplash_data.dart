@@ -1,3 +1,26 @@
+class UnSplashDataList {
+  List<UnSplashData>? listUnSplashData;
+
+  UnSplashDataList({this.listUnSplashData});
+
+  UnSplashDataList.fromJson(Map<String, dynamic> json) {
+    if (json['listUnSplashData'] != null) {
+      listUnSplashData = [];
+      json['listUnSplashData'].forEach((v) {
+        listUnSplashData?.add(new UnSplashData.fromJson(v));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.listUnSplashData != null) {
+      data['listUnSplashData'] = this.listUnSplashData?.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
 class UnSplashData {
   String? id;
   String? createdAt;

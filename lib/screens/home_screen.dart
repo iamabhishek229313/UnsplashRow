@@ -1,15 +1,18 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:localstorage/localstorage.dart';
 import 'package:unsplash_row/blocs/theme_bloc.dart';
 import 'package:unsplash_row/models/unsplash_data.dart';
 import 'package:unsplash_row/screens/image_detail_screen.dart';
 import 'package:unsplash_row/services/unsplash_api.dart';
-import 'package:unsplash_row/utils/constants.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -27,6 +30,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _tabController = TabController(length: 2, vsync: this);
   }
 
+  Future<fb.User?> _getUser() async {
+    fb.User? _user = await fb.FirebaseAuth.instance.currentUser;
+    return _user;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +47,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               floating: true,
               elevation: 10.0,
               actions: [
+                IconButton(
+                    onPressed: () async {
+                      await fb.FirebaseAuth.instance.signOut();
+                    },
+                    icon: Icon(Icons.login_outlined)),
                 IconButton(
                     onPressed: () {
                       BlocProvider.of<ThemeBloc>(context).add(ThemeChanged(
@@ -81,13 +94,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ];
         },
-        body: TabBarView(
-          controller: _tabController,
-          children: <Widget>[
-            DiscoverView(),
-            DiscoverView()
-            // Container(color: Colors.indigo),
-          ],
+        body: FutureBuilder(
+          future: _getUser(),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (!snapshot.hasData)
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            return TabBarView(
+              controller: _tabController,
+              children: <Widget>[
+                DiscoverView(
+                  user: snapshot.data,
+                ),
+                BookmarksView(
+                  user: snapshot.data,
+                )
+                // Container(color: Colors.indigo),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -97,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 class DiscoverView extends StatefulWidget {
   const DiscoverView({
     Key? key,
+    required this.user,
   }) : super(key: key);
+
+  final fb.User? user;
 
   @override
   _DiscoverViewState createState() => _DiscoverViewState();
@@ -189,8 +218,31 @@ class _DiscoverViewState extends State<DiscoverView> {
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) => ImageDetail(image: images[index])));
                   },
-                  onDoubleTap: () {
+                  onDoubleTap: () async {
                     /// [Put it at bookmark.]
+                    DocumentSnapshot _ds =
+                        await FirebaseFirestore.instance.collection('bookmarks').doc(widget.user!.uid).get();
+
+                    UnSplashDataList _data;
+                    if (_ds.exists) {
+                      _data = UnSplashDataList.fromJson(jsonDecode(jsonEncode(_ds.data())));
+                      _data.listUnSplashData?.add(images[index]);
+                      log(_data.listUnSplashData.toString());
+                      log("DATA : " + _data.toJson().toString());
+                      await FirebaseFirestore.instance
+                          .collection('bookmarks')
+                          .doc(widget.user!.uid)
+                          .update(_data.toJson());
+                    } else {
+                      _data = UnSplashDataList(listUnSplashData: []);
+                      _data.listUnSplashData?.add(images[index]);
+                      log("DATA : " + _data.toJson().toString());
+                      await FirebaseFirestore.instance
+                          .collection('bookmarks')
+                          .doc(widget.user!.uid)
+                          .set(_data.toJson());
+                    }
+                    log("Doc added");
                   },
                   child: Container(
                     constraints: BoxConstraints.expand(),
@@ -216,44 +268,47 @@ class _DiscoverViewState extends State<DiscoverView> {
 }
 
 class BookmarksView extends StatefulWidget {
-  const BookmarksView({Key? key}) : super(key: key);
+  const BookmarksView({Key? key, required this.user}) : super(key: key);
+
+  final fb.User? user;
 
   @override
   _BookmarksViewState createState() => _BookmarksViewState();
 }
 
 class _BookmarksViewState extends State<BookmarksView> {
-  final LocalStorage storage = new LocalStorage('storage');
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: storage.ready,
-      builder: (BuildContext context, snapshot) {
-        if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-        Map<String, UnSplashData> data = storage.getItem('bookmarks');
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance.collection('bookmarks').doc(widget.user!.uid).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
+        if (!snapshot.hasData)
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        UnSplashDataList? images = UnSplashDataList.fromJson(jsonDecode(jsonEncode(snapshot.data!.data())));
+        if (images == null || images.listUnSplashData!.length == 0)
+          return Center(
+            child: Text("Didn't found anything at bookamarked."),
+          );
 
         return StaggeredGridView.countBuilder(
           shrinkWrap: true,
           crossAxisCount: 4,
-          itemCount: data.length,
+          itemCount: images.listUnSplashData!.length,
           physics: BouncingScrollPhysics(),
           padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
           itemBuilder: (BuildContext context, int index) {
-            if (index == images.length)
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(
-                    height: 8.0,
-                  ),
-                  Text(
-                    "Loading more...",
-                    style: TextStyle(fontSize: 14.0),
-                  )
-                ],
-              );
             return Card(
               margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
               elevation: 2,
@@ -267,8 +322,8 @@ class _BookmarksViewState extends State<BookmarksView> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (_) => ImageDetail(image: images[index])));
+                        Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => ImageDetail(image: images.listUnSplashData![index])));
                       },
                       onDoubleTap: () {
                         /// [Put it at bookmark.]
@@ -276,7 +331,7 @@ class _BookmarksViewState extends State<BookmarksView> {
                       child: Container(
                         constraints: BoxConstraints.expand(),
                         child: CachedNetworkImage(
-                          imageUrl: images[index].urls?.regular ?? "",
+                          imageUrl: images.listUnSplashData![index].urls?.regular ?? "",
                           fit: BoxFit.cover,
                           progressIndicatorBuilder: (context, url, downloadProgress) =>
                               Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
@@ -295,10 +350,5 @@ class _BookmarksViewState extends State<BookmarksView> {
         );
       },
     );
-
-    if (images.isEmpty)
-      return Center(
-        child: CircularProgressIndicator(),
-      );
   }
 }
