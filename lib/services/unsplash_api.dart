@@ -17,8 +17,9 @@ class UnSplashAPI {
   }
   Future<Response> getImages(int page) async {
     List<UnSplashData> images = [];
-    var url = Uri.parse(location + endPoint + "?client_id=$ACCESS_KEY");
-    http.Response _response = await http.get(url);
+    var url = Uri.parse(location + endPoint + "?page=" + page.toString());
+    var headers = {"Authorization": "Client-ID " + ACCESS_KEY};
+    http.Response _response = await http.get(url, headers: headers);
     if (_response.statusCode == 200) {
       images = (jsonDecode(_response.body) as List).map((element) => UnSplashData.fromJson(element)).toList();
       return Response(true, images);

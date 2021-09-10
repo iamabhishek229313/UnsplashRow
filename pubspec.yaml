@@ -20,6 +20,7 @@ dependencies:
   http: ^0.13.3
   cached_network_image: ^3.1.0
   url_launcher: ^6.0.10
+  localstorage: null
 
 
 dev_dependencies:
