@@ -203,7 +203,7 @@ class DiscoverView extends StatefulWidget {
   _DiscoverViewState createState() => _DiscoverViewState();
 }
 
-class _DiscoverViewState extends State<DiscoverView> {
+class _DiscoverViewState extends State<DiscoverView> with AutomaticKeepAliveClientMixin<DiscoverView> {
   UnSplashAPI _unSplashAPI = UnSplashAPI();
   List<UnSplashData> images = [];
 
@@ -310,6 +310,11 @@ class _DiscoverViewState extends State<DiscoverView> {
                           .doc(widget.user!.uid)
                           .set(_data.toJson());
                     }
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                      "Added to Bookmarks",
+                      style: TextStyle(color: Colors.amber),
+                    )));
                     log("Doc added");
                   },
                   child: Container(
@@ -333,6 +338,9 @@ class _DiscoverViewState extends State<DiscoverView> {
       crossAxisSpacing: 0.0,
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class BookmarksView extends StatefulWidget {

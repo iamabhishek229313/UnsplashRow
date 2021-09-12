@@ -101,6 +101,11 @@ class TheSearch extends SearchDelegate<String> {
                           _data.listUnSplashData?.add(images[index]);
                           await FirebaseFirestore.instance.collection('bookmarks').doc(user.uid).set(_data.toJson());
                         }
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                          "Added to Bookmarks",
+                          style: TextStyle(color: Colors.amber),
+                        )));
                         log("Doc added");
                       },
                       child: Container(

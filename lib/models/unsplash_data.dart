@@ -29,7 +29,6 @@ class UnSplashData {
   String? altDescription;
   Urls? urls;
   int? likes;
-  bool? likedByUser;
   User? user;
 
   UnSplashData(
@@ -40,7 +39,6 @@ class UnSplashData {
       this.altDescription,
       this.urls,
       this.likes,
-      this.likedByUser,
       this.user});
 
   UnSplashData.fromJson(Map<String, dynamic> json) {
@@ -51,7 +49,6 @@ class UnSplashData {
     altDescription = json['alt_description'];
     urls = json['urls'] != null ? new Urls.fromJson(json['urls']) : null;
     likes = json['likes'];
-    likedByUser = json['liked_by_user'];
     user = json['user'] != null ? new User.fromJson(json['user']) : null;
   }
 
@@ -66,7 +63,6 @@ class UnSplashData {
       data['urls'] = this.urls?.toJson();
     }
     data['likes'] = this.likes;
-    data['liked_by_user'] = this.likedByUser;
     if (this.user != null) {
       data['user'] = this.user?.toJson();
     }
