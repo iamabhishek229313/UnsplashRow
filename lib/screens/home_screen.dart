@@ -4,15 +4,18 @@ import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:unsplash_row/blocs/theme_bloc.dart';
 import 'package:unsplash_row/models/unsplash_data.dart';
 import 'package:unsplash_row/screens/image_detail_screen.dart';
 import 'package:unsplash_row/services/unsplash_api.dart';
+import 'package:unsplash_row/utils/the_search_delegate.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -24,14 +27,78 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  Future<void> _showSearch() async {
+    await showSearch(
+      context: context,
+      delegate: TheSearch(),
+      query: "",
+    );
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print(e.toString());
+      return;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
   @override
   void initState() {
     super.initState();
+    initConnectivity();
     _tabController = TabController(length: 2, vsync: this);
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    // Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+    //   showDialog(
+    //     context: context,
+    //     builder: (ctx) => AlertDialog(
+    //       title: Text("Alert Dialog Box"),
+    //       content: Text("You have raised a Alert Dialog Box"),
+    //       actions: <Widget>[
+    //         FlatButton(
+    //           onPressed: () {
+    //             Navigator.of(ctx).pop();
+    //           },
+    //           child: Text("okay"),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // });
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result;
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 
   Future<fb.User?> _getUser() async {
-    fb.User? _user = await fb.FirebaseAuth.instance.currentUser;
+    fb.User? _user = fb.FirebaseAuth.instance.currentUser;
     return _user;
   }
 
@@ -60,7 +127,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     icon: Icon(BlocProvider.of<ThemeBloc>(context).state.themeMode == ThemeMode.dark
                         ? Icons.light_mode_outlined
                         : Icons.dark_mode_outlined)),
-                IconButton(onPressed: () {}, icon: Icon(Icons.search_rounded))
+                IconButton(
+                    onPressed: () {
+                      _showSearch();
+                    },
+                    icon: Icon(Icons.search_rounded))
               ],
               bottom: TabBar(
                 tabs: <Tab>[
@@ -222,13 +293,11 @@ class _DiscoverViewState extends State<DiscoverView> {
                     /// [Put it at bookmark.]
                     DocumentSnapshot _ds =
                         await FirebaseFirestore.instance.collection('bookmarks').doc(widget.user!.uid).get();
-
                     UnSplashDataList _data;
                     if (_ds.exists) {
                       _data = UnSplashDataList.fromJson(jsonDecode(jsonEncode(_ds.data())));
                       _data.listUnSplashData?.add(images[index]);
                       log(_data.listUnSplashData.toString());
-                      log("DATA : " + _data.toJson().toString());
                       await FirebaseFirestore.instance
                           .collection('bookmarks')
                           .doc(widget.user!.uid)
@@ -236,7 +305,6 @@ class _DiscoverViewState extends State<DiscoverView> {
                     } else {
                       _data = UnSplashDataList(listUnSplashData: []);
                       _data.listUnSplashData?.add(images[index]);
-                      log("DATA : " + _data.toJson().toString());
                       await FirebaseFirestore.instance
                           .collection('bookmarks')
                           .doc(widget.user!.uid)
@@ -344,7 +412,7 @@ class _BookmarksViewState extends State<BookmarksView> {
               ),
             );
           },
-          staggeredTileBuilder: (int index) => new StaggeredTile.count(2, index.isEven ? 2 : 3),
+          staggeredTileBuilder: (int index) => StaggeredTile.count(2, index.isEven ? 2 : 3),
           mainAxisSpacing: 4.0,
           crossAxisSpacing: 0.0,
         );
