@@ -15,6 +15,7 @@ import 'package:unsplash_row/blocs/theme_bloc.dart';
 import 'package:unsplash_row/models/unsplash_data.dart';
 import 'package:unsplash_row/screens/image_detail_screen.dart';
 import 'package:unsplash_row/services/unsplash_api.dart';
+import 'package:unsplash_row/utils/constants.dart';
 import 'package:unsplash_row/utils/the_search_delegate.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -42,17 +43,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
-    // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       result = await _connectivity.checkConnectivity();
     } on PlatformException catch (e) {
       print(e.toString());
       return;
     }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) {
       return Future.value(null);
     }
@@ -66,28 +62,47 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     initConnectivity();
     _tabController = TabController(length: 2, vsync: this);
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-    // Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-    //   showDialog(
-    //     context: context,
-    //     builder: (ctx) => AlertDialog(
-    //       title: Text("Alert Dialog Box"),
-    //       content: Text("You have raised a Alert Dialog Box"),
-    //       actions: <Widget>[
-    //         FlatButton(
-    //           onPressed: () {
-    //             Navigator.of(ctx).pop();
-    //           },
-    //           child: Text("okay"),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    // });
   }
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     setState(() {
       _connectionStatus = result;
+      if (_connectionStatus.index == 3) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [Text("Connectivity Issue"), Icon(Icons.wifi_off_outlined)],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Once you have stronger internet connection, we'll automatically show you stuffs.",
+                    style: TextStyle(fontSize: 14.0)),
+                SizedBox(
+                  height: 16.0,
+                ),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: RaisedButton(
+                      onPressed: () {
+                        SystemNavigator.pop();
+                      },
+                      child: Text(
+                        "Close this Application",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      color: AppColors.black,
+                      elevation: 10.0),
+                )
+              ],
+            ),
+          ),
+        );
+      }
+      log(_connectionStatus.index.toString() + " : " + _connectionStatus.toString());
     });
   }
 
@@ -372,10 +387,15 @@ class _BookmarksViewState extends State<BookmarksView> {
           return Center(
             child: CircularProgressIndicator(),
           );
+        log(snapshot.data!.data().toString());
+        if (snapshot.data!.data() == null)
+          return Center(
+            child: Text("Didn't found anything Bookmarked."),
+          );
         UnSplashDataList? images = UnSplashDataList.fromJson(jsonDecode(jsonEncode(snapshot.data!.data())));
         if (images == null || images.listUnSplashData!.length == 0)
           return Center(
-            child: Text("Didn't found anything at bookamarked."),
+            child: Text("Didn't found anything Bookmarked."),
           );
 
         return StaggeredGridView.countBuilder(

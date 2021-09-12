@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _jumpToScreen() {
-    Timer(Duration(milliseconds: 5000),
+    Timer(Duration(milliseconds: 320),
         () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => StateWrapperScreen())));
   }
 
