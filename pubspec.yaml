@@ -32,6 +32,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons:
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/logo.png"
 
 flutter:
   uses-material-design: true
@@ -39,6 +45,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/logo/
 
   # fonts:
   #   - family: Schyler

@@ -77,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (firstTime == null || firstTime == true) {
       WidgetsBinding.instance!
           .addPostFrameCallback((_) => ShowCaseWidget.of(context)!.startShowCase([_one, _two, _three, _four]));
-    } else {
       _prefs.setBool(AppConstants.firstTime, false);
     }
   }
@@ -114,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   key: _four,
                   title: "Hello Buddy!",
                   description:
-                      "These are the quick lessons for you\n1. Tap on Image to full-image.\n2. Double-Tap to add an image into bookmark\n3. Click on the Add/Remove bookmark to do other operations.",
+                      "These are the quick lessons for you\n1. Tap on an image view full-image.\n2. Double-Tap to add an image into bookmark\n3. Tap on the Add/Remove bookmark icon to do other operations.",
                   descTextStyle: TextStyle(fontSize: 12.0, color: Colors.black),
                   child: Text("UnsplashRow")),
               pinned: true,
@@ -125,8 +124,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   key: _one,
                   titleTextStyle: TextStyle(fontSize: 14.0, color: Colors.black),
                   descTextStyle: TextStyle(fontSize: 12.0, color: Colors.black),
-                  title: "Toogle Buttons",
-                  description: "Click here to logout, Toogle dark and light theme & search",
+                  title: "Toggle Buttons",
+                  description: "Click here to logout, Toggle dark and light theme & search",
                   child: Row(
                     children: [
                       IconButton(
