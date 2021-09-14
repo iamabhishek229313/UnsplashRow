@@ -35,7 +35,7 @@ class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
   ThemeBloc(ThemeState initialState) : super(initialState);
 
   @override
-  ThemeState get initialState => ThemeState(ThemeMode.light);
+  ThemeState get initialState => ThemeState(ThemeMode.dark);
 
   @override
   Stream<ThemeState> mapEventToState(ThemeEvent event) async* {
@@ -51,8 +51,8 @@ class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
     final isDarkModeEnabled = _prefs.getBool(AppConstants.darkMode);
 
     if (isDarkModeEnabled == null) {
-      _prefs.setBool(AppConstants.darkMode, false);
-      yield ThemeState(ThemeMode.light);
+      _prefs.setBool(AppConstants.darkMode, true);
+      yield ThemeState(ThemeMode.dark);
     } else {
       ThemeMode themeMode = isDarkModeEnabled ? ThemeMode.dark : ThemeMode.light;
       yield ThemeState(themeMode);
