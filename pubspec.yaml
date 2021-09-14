@@ -24,11 +24,20 @@ dependencies:
   firebase_core: ^1.4.0
   cloud_firestore: ^2.4.0
   connectivity_plus: ^1.1.0
+  google_fonts: ^2.1.0
+  showcaseview:
+
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons:
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/logo.png"
 
 flutter:
   uses-material-design: true
@@ -36,6 +45,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/logo/
 
   # fonts:
   #   - family: Schyler

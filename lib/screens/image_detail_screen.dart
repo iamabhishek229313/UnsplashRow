@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unsplash_row/blocs/theme_bloc.dart';
 import 'package:unsplash_row/models/unsplash_data.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ImageDetail extends StatefulWidget {
-  const ImageDetail({Key? key, required this.image}) : super(key: key);
+  ImageDetail({Key? key, required this.image, required this.bookmarkedIds}) : super(key: key);
   final UnSplashData image;
+  Set<String> bookmarkedIds;
 
   @override
   _ImageDetailState createState() => _ImageDetailState();
@@ -25,6 +25,15 @@ class _ImageDetailState extends State<ImageDetail> {
         iconTheme: IconThemeData(color: Colors.white),
         elevation: 0.0,
         brightness: Brightness.dark,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Icon(
+              widget.bookmarkedIds.contains(widget.image.id) ? Icons.bookmark : Icons.bookmark_outline,
+              color: Colors.amber.shade600,
+            ),
+          )
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Column(
@@ -139,27 +148,3 @@ class _ImageDetailState extends State<ImageDetail> {
     );
   }
 }
-
-
-          // Align(
-          //     alignment: Alignment.bottomCenter,
-          //     child: Container(
-          //       height: 100.0,
-          //       width: double.maxFinite,
-          //       margin: EdgeInsets.all(8.0).copyWith(bottom: 36.0),
-          //       color: (BlocProvider.of<ThemeBloc>(context).state.themeMode == ThemeMode.dark)
-          //           ? Colors.black38
-          //           : Colors.white70,
-          //       child: Row(
-          //         children: [
-          //           Text(
-          //             "by ",
-          //             style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600),
-          //           ),
-          //           Text(
-          //             widget.image.user?.username ?? "Unknown",
-          //             style: TextStyle(fontSize: 18.0, color: Colors.indigo.shade500, fontWeight: FontWeight.w600),
-          //           )
-          //         ],
-          //       ),
-          //     ))

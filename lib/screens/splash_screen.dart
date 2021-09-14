@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unsplash_row/blocs/theme_bloc.dart';
-import 'package:unsplash_row/screens/home_screen.dart';
 import 'package:unsplash_row/screens/state_wrapper_screen.dart';
 import 'package:unsplash_row/utils/constants.dart';
 
